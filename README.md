@@ -1,542 +1,514 @@
-Command Logger System - Complete Documentation
-📋 Table of Contents
+# 🔐 Command Logger
 
-    Overview
+> A lightweight Bash-based Linux command auditing and user activity monitoring system.
 
-    Architecture
+**Command Logger** records shell activity on Linux servers, including executed commands, timestamps, working directories, login/logout events, session information, and user activity.
 
-    Installation
+It is designed for **Linux system administrators, security teams, DevOps engineers, and server operators** who need a simple way to monitor and audit shell activity without deploying a full SIEM solution.
 
-    Configuration
+---
 
-    Commands Reference
+## ✨ Features
 
-    Log Files Structure
+* 🔐 **Command Logging**
 
-    User Guide
+  * Records commands executed by users.
+  * Stores command timestamp and working directory.
+  * Maintains per-user command history.
 
-    Administrator Guide
+* 👥 **Multi-User Support**
 
-    Troubleshooting
+  * Separate log files for each user.
+  * Centralized master log containing activity from all users.
 
-    Uninstallation
+* 🔑 **Login / Logout Tracking**
 
-    Security
+  * Records login events.
+  * Records logout events.
+  * Captures session and terminal information.
 
-    FAQ
+* 🖥️ **System Information**
 
-Overview
-What is Command Logger?
+  * Displays hostname.
+  * Displays server IP.
+  * Displays user IP when available.
+  * Shows OS, kernel, uptime, memory, disk, and load information.
 
-The Command Logger is a comprehensive Bash-based system that tracks and records all user commands executed on a Linux server. It provides:
+* 📊 **Statistics**
 
-    Real-time command logging for all users
+  * Total commands.
+  * Login count.
+  * Logout count.
+  * Per-user activity statistics.
 
-    User-specific history with timestamps
+* 🛡️ **Administrator Monitoring**
 
-    Admin monitoring capabilities
+  * View activity for individual users.
+  * View activity across all users.
+  * Search logs for suspicious commands.
+  * Review recent activity.
 
-    Login/Logout tracking
+* 🎨 **Readable CLI Output**
 
-    Session management
+  * Formatted tables.
+  * Human-readable command history.
+  * Interactive monitoring menu.
 
-    Beautiful formatted output with tables
+* 🚀 **Automatic Startup**
 
-Features
-Feature	Description
-🔐 User Tracking	Logs every command with timestamp and working directory
-👥 Multi-user Support	Separate logs for each user
-🛡️ Root Privileges	Root can view all users' logs
-📊 Statistics	Command counts, login counts, logout counts
-🎨 Formatted Output	Clean tables with proper alignment
-🚀 Automatic	Starts automatically on login
-📁 Centralized Storage	All logs in /var/log/user_commands/
+  * Logger is loaded through `/etc/profile.d/`.
+  * User activity is automatically monitored when a shell session starts.
 
-Architecture
-System Components
-text
+* 🧹 **Log Cleanup**
 
-┌─────────────────────────────────────────────────────────────────────┐
-│                     COMMAND LOGGER SYSTEM                          │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐         │
-│  │   Profile    │───▶│   Logger     │───▶│    Log       │         │
-│  │    Script    │    │   Script     │    │   Files      │         │
-│  │              │    │              │    │              │         │
-│  └──────────────┘    └──────────────┘    └──────────────┘         │
-│         │                   │                   │                  │
-│         ▼                   ▼                   ▼                  │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐         │
-│  │ /etc/profile │    │ /usr/m1/     │    │ /var/log/    │         │
-│  │ /user_command │    │ command_     │    │ user_        │         │
-│  │ _logger.sh   │    │ logger.sh    │    │ commands/    │         │
-│  └──────────────┘    └──────────────┘    └──────────────┘         │
-│                                                                     │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐         │
-│  │   Monitor    │    │  Uninstall   │    │  Welcome     │         │
-│  │   Script     │    │   Script     │    │  Message     │         │
-│  │              │    │              │    │              │         │
-│  └──────────────┘    └──────────────┘    └──────────────┘         │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
+  * Supports cleaning old logs.
+  * Monitoring tools include cleanup functionality.
 
-File Structure
-text
+* 📦 **Easy Installation**
 
-/usr/m1/
-├── command_logger.sh          # Main logging script
-└── monitor.sh                 # Admin monitoring tool
+  * Installation script included.
+  * Uninstallation script included.
 
-/etc/profile.d/
-└── user_command_logger.sh     # Auto-start script
+---
 
+# 🏗️ Architecture
+
+```text
+                         Linux Server
+                              │
+                              │
+                    ┌─────────▼─────────┐
+                    │    User Login     │
+                    └─────────┬─────────┘
+                              │
+                              ▼
+                  /etc/profile.d/
+                user_command_logger.sh
+                              │
+                              ▼
+                    command_logger.sh
+                              │
+             ┌────────────────┼────────────────┐
+             │                │                │
+             ▼                ▼                ▼
+        Login Event      Command Event    Logout Event
+             │                │                │
+             └────────────────┼────────────────┘
+                              │
+                              ▼
+                  /var/log/user_commands/
+                              │
+             ┌────────────────┴────────────────┐
+             │                                 │
+             ▼                                 ▼
+      master_commands.log              users/
+                                       │
+                         ┌─────────────┼─────────────┐
+                         │             │             │
+                         ▼             ▼             ▼
+                    root.log      user1.log      user2.log
+```
+
+---
+
+# 📁 Project Structure
+
+```text
+command_logger/
+├── command_logger.sh
+├── monitor.sh
+├── UserMon.sh
+├── install.sh
+├── uninstall.sh
+├── Commands_Reference.txt
+├── README.md
+├── readme.md
+└── LICENSE
+```
+
+## Main Components
+
+| File                     | Purpose                                   |
+| ------------------------ | ----------------------------------------- |
+| `command_logger.sh`      | Main command logging engine               |
+| `monitor.sh`             | Interactive administrator monitoring tool |
+| `UserMon.sh`             | User monitoring functionality             |
+| `install.sh`             | Installation and setup                    |
+| `uninstall.sh`           | Removes the logger from the system        |
+| `Commands_Reference.txt` | Command reference                         |
+| `README.md`              | Project documentation                     |
+| `LICENSE`                | Project license                           |
+
+---
+
+# 📂 Log Storage
+
+By default, logs are stored under:
+
+```text
 /var/log/user_commands/
-├── master_commands.log        # All commands (all users)
+```
+
+Structure:
+
+```text
+/var/log/user_commands/
+├── master_commands.log
 └── users/
-    ├── root_commands.log      # Root's commands
-    ├── administrator_commands.log  # Administrator's commands
-    └── [user]_commands.log    # Each user's commands
+    ├── root_commands.log
+    ├── administrator_commands.log
+    ├── user1_commands.log
+    └── user2_commands.log
+```
 
-Installation
-Prerequisites
+### Master Log
 
-    Linux OS (Ubuntu, CentOS, Debian, etc.)
+```text
+/var/log/user_commands/master_commands.log
+```
 
-    Bash 4.0+
+Contains command activity from all users.
 
-    Root access (for system-wide installation)
+### Per-User Logs
 
-    Basic permissions (for user installation)
+```text
+/var/log/user_commands/users/<username>_commands.log
+```
 
-Quick Installation
-bash
+Contains activity associated with a specific user.
 
-# 1. Create installation directory
-mkdir -p /usr/m1
-cd /usr/m1
+---
 
-# 2. Create the main script
-cat > command_logger.sh << 'EOF'
-[Paste the script content here]
-EOF
+# 📝 Log Format
 
-# 3. Create monitor script
-cat > monitor.sh << 'EOF'
-[Paste the monitor script content here]
-EOF
+Command Logger uses a simple structured text format.
 
-# 4. Make scripts executable
-chmod +x *.sh
+### Login Event
 
-# 5. Create profile script
-cat > /etc/profile.d/user_command_logger.sh << 'EOF'
-#!/bin/bash
-if [ -f /usr/m1/command_logger.sh ]; then
-    source /usr/m1/command_logger.sh
-else
-    echo "⚠️ Command logger not found"
-fi
-export -f show_my_logs count_my_commands show_user_logs
-EOF
-
-chmod 644 /etc/profile.d/user_command_logger.sh
-
-# 6. Create log directory
-mkdir -p /var/log/user_commands/users
-chmod 777 /var/log/user_commands
-chmod 777 /var/log/user_commands/users
-
-# 7. Apply changes
-source /usr/m1/command_logger.sh
-
-Verification
-bash
-
-# Check if installed correctly
-ls -la /usr/m1/command_logger.sh
-ls -la /etc/profile.d/user_command_logger.sh
-ls -la /var/log/user_commands/
-
-# Test the logger
-echo "test command"
-show_my_logs
-
-
-
-Configuration
-Environment Variables
-Variable	Description	Default
-LOG_BASE	Base directory for logs	/var/log/user_commands
-USER_LOG_DIR	User logs directory	$LOG_BASE/users
-MASTER_LOG	Master log file	$LOG_BASE/master_commands.log
-USER_LOG_FILE	Current user's log file	$USER_LOG_DIR/${USERNAME}_commands.log
-Customization
-Change Log Directory
-bash
-
-# Edit the script
-vim /usr/m1/command_logger.sh
-
-# Change this line:
-LOG_BASE="/var/log/user_commands"
-
-# To:
-LOG_BASE="/custom/log/path"
-
-Change Number of Commands Displayed
-bash
-
-# In show_my_logs function, change:
-grep "^\[CMD\]" "$log_file" | tail -50
-
-# To:
-grep "^\[CMD\]" "$log_file" | tail -100
-
-Disable Welcome Message
-bash
-
-# Comment out this section in main execution:
-if [ -t 0 ] && [ -n "$PS1" ]; then
-    show_welcome
-fi
-
-Commands Reference
-For All Users
-show_my_logs
-
-Display your command history.
-
-Syntax:
-bash
-
-show_my_logs
-
-Example Output:
-text
-
-+--------------------------------------------------------------------------------------------------------------+
-|  COMMAND HISTORY FOR administrator                                                                           |
-+--------------------------------------------------------------------------------------------------------------+
-| #     | Date & Time            | Directory                           | Command                                  |
-+-------+------------------------+-------------------------------------+------------------------------------------+
-| 1     | 2026-09-06 15:06:02   | /home/administrator                 | df -h                                    |
-| 2     | 2026-09-06 15:06:06   | /home/administrator                 | free -m                                  |
-| 3     | 2026-09-06 15:06:09   | /home/administrator                 | sudo -i                                  |
-+-------+------------------------+-------------------------------------+------------------------------------------+
-
-+------------------------------------------------------------------------------+
-|  STATISTICS                                                                  |
-+------------------------------------------------------------------------------+
-| Total Commands                 | 3                                        |
-| Total Logins                   | 1                                        |
-| Total Logouts                  | 0                                        |
-+------------------------------------------------------------------------------+
-
-count_my_commands
-
-Count total commands executed by current user.
-
-Syntax:
-bash
-
-count_my_commands
-
-Example Output:
-text
-
-📊 Total commands executed: 42
-
-debug_show_raw
-
-Show raw log content for debugging purposes.
-
-Syntax:
-bash
-
-debug_show_raw
-
-Example Output:
-text
-
-=== RAW LOG CONTENT (last 10 lines) ===
-[CMD] 2026-09-06 15:06:02 | /home/administrator | df -h
-[CMD] 2026-09-06 15:06:06 | /home/administrator | free -m
-
-=== COMMAND ENTRIES (last 5) ===
-[CMD] 2026-09-06 15:06:02 | /home/administrator | df -h
-
-=== TOTAL COMMANDS: 42
-
-=== LOG DIRECTORY CONTENTS ===
-total 16
--rw-r--r-- 1 root root 7329 سبت  6 15:37 root_commands.log
--rw-r--r-- 1 root root 2048 سبت  6 15:30 administrator_commands.log
-
-For Root Only
-show_user_logs
-
-Display logs for specific users or all users.
-
-Syntax:
-bash
-
-# Show all users
-show_user_logs
-
-# Show specific user
-show_user_logs <username>
-
-# Show root's own logs
-show_user_logs root
-
-Example Output (Specific User):
-text
-
-+--------------------------------------------------------------------------------------------------------------+
-|  COMMAND HISTORY FOR administrator                                                                           |
-+--------------------------------------------------------------------------------------------------------------+
-| #     | Date & Time            | Directory                           | Command                                  |
-+-------+------------------------+-------------------------------------+------------------------------------------+
-| 1     | 2026-09-06 15:06:02   | /home/administrator                 | df -h                                    |
-| 2     | 2026-09-06 15:06:06   | /home/administrator                 | free -m                                  |
-+-------+------------------------+-------------------------------------+------------------------------------------+
-
-+------------------------------------------------------------------------------+
-|  STATISTICS FOR administrator                                                |
-+------------------------------------------------------------------------------+
-| Total Commands                 | 2                                        |
-| Total Logins                   | 1                                        |
-| Total Logouts                  | 0                                        |
-+------------------------------------------------------------------------------+
-
-Example Output (All Users):
-text
-
-+--------------------------------------------------------------------------------------------------------------+
-|  ALL USERS COMMAND HISTORY                                                                                   |
-+--------------------------------------------------------------------------------------------------------------+
-
-+--------------------------------------------------------------------------------------------------------------+
-|  USER: root (Last 10 commands)                                                                               |
-+--------------------------------------------------------------------------------------------------------------+
-| #     | Date & Time            | Directory                           | Command                                  |
-+-------+------------------------+-------------------------------------+------------------------------------------+
-| 1     | 2026-09-06 15:00:00   | /root                               | ls -la                                   |
-+-------+------------------------+-------------------------------------+------------------------------------------+
-📊 Total commands for root: 42
-
-+--------------------------------------------------------------------------------------------------------------+
-|  USER: administrator (Last 10 commands)                                                                      |
-+--------------------------------------------------------------------------------------------------------------+
-| #     | Date & Time            | Directory                           | Command                                  |
-+-------+------------------------+-------------------------------------+------------------------------------------+
-| 1     | 2026-09-06 15:30:00   | /home/administrator                 | df -h                                    |
-+-------+------------------------+-------------------------------------+------------------------------------------+
-📊 Total commands for administrator: 15
-
-Monitor Script
-monitor.sh
-
-Interactive admin monitoring tool with menu.
-
-Usage:
-bash
-
-/usr/m1/monitor.sh
-
-Menu Options:
-text
-
-+----------------------------------------------------------------------------------+
-|  USER ACTIVITY MONITOR                                                           |
-+----------------------------------------------------------------------------------+
-| 1. Show Active Users                                                            |
-| 2. Show Recent Commands (Last 20)                                              |
-| 3. Show User Statistics                                                        |
-| 4. Show Specific User Log                                                      |
-| 5. Clean Old Logs (30+ days)                                                  |
-| 6. Show Full Log (Last 30 entries)                                            |
-| 7. Uninstall Logger                                                           |
-| 0. Exit                                                                        |
-+----------------------------------------------------------------------------------+
-
-Monitor Commands
-Option	Description	Example
-1	Show currently logged-in users	who command output
-2	Show last 20 commands from all users	Recent activity
-3	Statistics per user	Command counts
-4	View specific user's logs	Enter username
-5	Clean logs older than 30 days	Automatic cleanup
-6	Full log with all entries	Last 30 entries
-7	Uninstall the logger	Complete removal
-0	Exit monitor	-
-Log Files Structure
-Log File Format
-Login Entry
-text
-
-[LOGIN] username | YYYY-MM-DD HH:MM:SS | Host: hostname | Server IP: IP | User IP: IP | Terminal: terminal | Session: PID
-
-Command Entry
-text
-
-[CMD] YYYY-MM-DD HH:MM:SS | /path/to/directory | command with arguments
-
-Logout Entry
-text
-
-[LOGOUT] username | YYYY-MM-DD HH:MM:SS | Session: PID
-
-Example Log File
-bash
-
+```text
 [LOGIN] administrator | 2026-09-06 15:30:45 | Host: server01 | Server IP: 192.168.1.100 | User IP: 192.168.1.50 | Terminal: pts/0 | Session: 12345
+```
+
+### Command Event
+
+```text
 [CMD] 2026-09-06 15:30:50 | /home/administrator | ls -la
-[CMD] 2026-09-06 15:30:55 | /home/administrator | pwd
-[CMD] 2026-09-06 15:31:00 | /home/administrator | cd /tmp
-[CMD] 2026-09-06 15:31:05 | /tmp | whoami
+```
+
+### Logout Event
+
+```text
 [LOGOUT] administrator | 2026-09-06 15:35:00 | Session: 12345
+```
 
-Log Files Location
-File	Path	Description
-Master Log	/var/log/user_commands/master_commands.log	All commands from all users
-Root Log	/var/log/user_commands/users/root_commands.log	Only root's commands
-User Log	/var/log/user_commands/users/[username]_commands.log	Specific user's commands
-User Guide
-For Regular Users
-1. First Login
+This makes the logs easy to process using standard Linux tools such as:
 
-When you log in, you'll see:
-text
+```bash
+grep
+awk
+sed
+cut
+sort
+uniq
+tail
+```
 
-+----------------------------------------------------------------------------------+
-|  WELCOME TO SERVER01                                                             |
-+----------------------------------------------------------------------------------+
-| Username                    | administrator                                      |
-| Hostname                    | server01                                           |
-| Server IP                   | 192.168.1.100                                      |
-| Your IP                     | 192.168.1.50                                       |
-| Login Time                  | 2026-09-06 15:30:45                                |
-| Terminal                    | /dev/pts/0                                         |
-| Session ID                  | 12345                                              |
-+----------------------------------------------------------------------------------+
+---
 
-+----------------------------------------------------------------------------------+
-|  SYSTEM INFORMATION                                                              |
-+----------------------------------------------------------------------------------+
-| OS                          | Ubuntu 22.04 LTS (Jammy) - x86_64                 |
-| Kernel                      | 5.15.0-86-generic                                  |
-| Uptime                      | up 3 days, 5 hours                                 |
-| Load Average                | 0.05, 0.10, 0.15                                   |
-| Memory Usage                | 2.3G/7.8G                                          |
-| Disk Usage                  | 45G/100G (45%)                                     |
-+----------------------------------------------------------------------------------+
+# ⚙️ Requirements
 
-2. Commands Available
-bash
+The project is designed for Linux systems with:
 
-# View your command history
+* Bash 4.0+
+* Linux shell environment
+* Root/sudo access for system-wide installation
+* Standard Linux utilities
+
+It can be used on common Linux distributions such as:
+
+* Ubuntu
+* Debian
+* RHEL
+* CentOS
+* Rocky Linux
+* AlmaLinux
+* Oracle Linux
+* Other Bash-compatible Linux systems
+
+---
+
+# 🚀 Installation
+
+## Option 1 — Clone the Repository
+
+```bash
+git clone https://github.com/maelhabashy/command_logger.git
+cd command_logger
+```
+
+Make the scripts executable:
+
+```bash
+chmod +x *.sh
+```
+
+Run the installer:
+
+```bash
+sudo ./install.sh
+```
+
+After installation, start a new shell session:
+
+```bash
+exit
+```
+
+Then reconnect to the server.
+
+---
+
+# 🔎 Verify Installation
+
+Check the main installation directory:
+
+```bash
+ls -la /usr/m1/
+```
+
+Check the profile integration:
+
+```bash
+ls -la /etc/profile.d/user_command_logger.sh
+```
+
+Check the log directory:
+
+```bash
+ls -la /var/log/user_commands/
+```
+
+You should see the logging directory and associated files.
+
+---
+
+# 🧪 Test the Logger
+
+Run a few commands:
+
+```bash
+pwd
+whoami
+hostname
+df -h
+free -m
+```
+
+Then check your command history:
+
+```bash
 show_my_logs
+```
 
-# Count your commands
+Count your commands:
+
+```bash
 count_my_commands
+```
 
-# Debug raw logs
+For raw debugging information:
+
+```bash
 debug_show_raw
+```
 
-3. Working with Logs
+---
 
-View Last 10 Commands:
-bash
+# 👤 User Commands
 
+## View Your Command History
+
+```bash
 show_my_logs
+```
 
-Search for Specific Command:
-bash
+Example:
 
-show_my_logs | grep "sudo"
+```text
++------------------------------------------------------------------------------------------------+
+| COMMAND HISTORY FOR administrator                                                              |
++------------------------------------------------------------------------------------------------+
+| # | Date & Time         | Directory             | Command                                      |
++---+---------------------+----------------------+----------------------------------------------+
+| 1 | 2026-09-06 15:06:02 | /home/administrator  | df -h                                        |
+| 2 | 2026-09-06 15:06:06 | /home/administrator  | free -m                                      |
+| 3 | 2026-09-06 15:06:09 | /home/administrator  | sudo -i                                      |
++------------------------------------------------------------------------------------------------+
+```
 
-Count Commands:
-bash
+---
 
+## Count Your Commands
+
+```bash
 count_my_commands
+```
 
-Administrator Guide
-For Root/Admin Users
-1. Monitoring Users
+Example:
 
-View All Active Users:
-bash
+```text
+📊 Total commands executed: 42
+```
 
-/usr/m1/monitor.sh
-# Select option 1
+---
 
-View All User Statistics:
-bash
+## Debug Raw Logs
 
-/usr/m1/monitor.sh
-# Select option 3
+```bash
+debug_show_raw
+```
 
-View Specific User Logs:
-bash
+Useful when troubleshooting logging or formatting problems.
 
-# From command line
+---
+
+# 👑 Administrator Commands
+
+Administrators/root users can inspect activity for other users.
+
+## View All Users
+
+```bash
+show_user_logs
+```
+
+## View a Specific User
+
+```bash
 show_user_logs administrator
+```
 
-# From monitor
-/usr/m1/monitor.sh
-# Select option 4, then enter username
+## View Root Logs
 
-2. Analyzing Logs
+```bash
+show_user_logs root
+```
 
-Find Suspicious Activity:
-bash
+---
 
-# Find all sudo commands
+# 📊 Monitoring Tool
+
+Command Logger includes an interactive monitoring tool:
+
+```bash
+sudo /usr/m1/monitor.sh
+```
+
+The monitoring menu provides options such as:
+
+```text
++-------------------------------------------------------------+
+|                  USER ACTIVITY MONITOR                      |
++-------------------------------------------------------------+
+| 1. Show Active Users                                        |
+| 2. Show Recent Commands                                    |
+| 3. Show User Statistics                                    |
+| 4. Show Specific User Log                                  |
+| 5. Clean Old Logs                                          |
+| 6. Show Full Log                                           |
+| 7. Uninstall Logger                                        |
+| 0. Exit                                                    |
++-------------------------------------------------------------+
+```
+
+This gives administrators a convenient CLI interface instead of manually searching log files.
+
+---
+
+# 🔍 Security / Activity Investigation
+
+Because the logs are plain text, standard Linux tools can be used for investigation.
+
+## Search for sudo commands
+
+```bash
 grep "sudo" /var/log/user_commands/users/*_commands.log
+```
 
-# Find commands run from unusual directories
+## Search for commands executed from `/tmp`
+
+```bash
 grep "/tmp" /var/log/user_commands/users/*_commands.log
+```
 
-# Find failed commands (if exit codes were logged)
-grep "Exit:1" /var/log/user_commands/users/*_commands.log
+## Search for a specific command
 
-User Activity Report:
-bash
+```bash
+grep "systemctl" /var/log/user_commands/users/*_commands.log
+```
 
-# Create a report for a specific user
-echo "=== User Activity Report for administrator ==="
-echo "Commands: $(grep -c '^\[CMD\]' /var/log/user_commands/users/administrator_commands.log)"
-echo "Logins: $(grep -c '^\[LOGIN\]' /var/log/user_commands/users/administrator_commands.log)"
-echo "Logouts: $(grep -c '^\[LOGOUT\]' /var/log/user_commands/users/administrator_commands.log)"
+## View the latest activity
 
-Export Logs for Forensics:
-bash
+```bash
+tail -50 /var/log/user_commands/master_commands.log
+```
 
-# Export all logs
-tar -czf logs_$(date +%Y%m%d).tar.gz /var/log/user_commands/
+## Follow the master log in real time
 
-# Export specific user
-cp /var/log/user_commands/users/administrator_commands.log ./admin_$(date +%Y%m%d).log
+```bash
+tail -f /var/log/user_commands/master_commands.log
+```
 
-3. Maintenance
+---
 
-Clean Old Logs:
-bash
+# 📦 Log Export
 
-# From monitor
-/usr/m1/monitor.sh
-# Select option 5
+Export all logs:
 
-# From command line
-find /var/log/user_commands/ -name "*.log" -mtime +30 -delete
+```bash
+tar -czf logs_$(date +%Y%m%d).tar.gz \
+    /var/log/user_commands/
+```
 
-Set Up Log Rotation:
-bash
+Export a specific user's log:
 
-# Add to logrotate
-cat > /etc/logrotate.d/user_commands << 'EOF'
+```bash
+cp /var/log/user_commands/users/administrator_commands.log \
+   ./administrator_$(date +%Y%m%d).log
+```
+
+---
+
+# 🧹 Log Cleanup
+
+The monitoring tool supports cleanup of old logs.
+
+You can also manually remove logs older than 30 days:
+
+```bash
+find /var/log/user_commands/ \
+    -name "*.log" \
+    -mtime +30 \
+    -delete
+```
+
+> **Warning:** Deleting logs may remove information required for auditing or forensic investigation. Make sure your retention policy is defined before enabling automatic deletion.
+
+---
+
+# 🔄 Log Rotation
+
+For production environments, configure `logrotate` to prevent log files from growing indefinitely.
+
+Example:
+
+```bash
+sudo nano /etc/logrotate.d/user_commands
+```
+
+Example configuration:
+
+```text
 /var/log/user_commands/*.log {
     daily
     rotate 30
@@ -545,376 +517,480 @@ cat > /etc/logrotate.d/user_commands << 'EOF'
     notifempty
     create 644 root root
 }
-EOF
+```
 
-# Test logrotate
-logrotate -d /etc/logrotate.d/user_commands
+Test the configuration:
 
-Troubleshooting
-Common Issues
-Issue 1: "No logs found for user"
+```bash
+sudo logrotate -d /etc/logrotate.d/user_commands
+```
 
-Symptoms:
-bash
+---
 
-show_user_logs administrator
-❌ No logs found for user: administrator
+# ⚙️ Configuration
 
-Solution:
-bash
+The default log directory is:
 
-# 1. Check if user has logged in
-ls -la /var/log/user_commands/users/
+```text
+/var/log/user_commands
+```
 
-# 2. Create log file manually
-touch /var/log/user_commands/users/administrator_commands.log
-chmod 666 /var/log/user_commands/users/administrator_commands.log
+The main environment variables include:
 
-# 3. Have user login and run commands
-su - administrator
-echo "test"
-exit
+| Variable        | Description             |
+| --------------- | ----------------------- |
+| `LOG_BASE`      | Base directory for logs |
+| `USER_LOG_DIR`  | Per-user log directory  |
+| `MASTER_LOG`    | Master log file         |
+| `USER_LOG_FILE` | Current user's log file |
 
-Issue 2: Empty Table Output
+Default:
 
-Symptoms:
-text
+```bash
+LOG_BASE="/var/log/user_commands"
+```
 
-+-------+------------------------+-------------------------------------+------------------------------------------+
-| #     | Date & Time            | Directory                           | Command                                  |
-+-------+------------------------+-------------------------------------+------------------------------------------+
-+-------+------------------------+-------------------------------------+------------------------------------------+
+You can customize the location according to your server's logging policy.
 
-Solution:
-bash
+---
 
-# 1. Check raw log content
-debug_show_raw
+# 🔐 Security Considerations
 
-# 2. Verify log format
-cat /var/log/user_commands/users/$(whoami)_commands.log | head -5
+Command logging can contain **sensitive information**.
 
-# 3. Check if commands are being logged
-grep -c "^\[CMD\]" /var/log/user_commands/users/$(whoami)_commands.log
+Commands may include:
 
-# 4. Re-source the script
-source /usr/m1/command_logger.sh
+```text
+passwords
+tokens
+API keys
+database credentials
+private paths
+internal hostnames
+security commands
+```
 
-Issue 3: Permission Denied
+For example:
 
-Symptoms:
-text
+```bash
+mysql -u root -pMyPassword
+```
 
--bash: /var/log/user_commands/master_commands.log: Permission denied
+could result in sensitive information being written to logs.
 
-Solution:
-bash
+Therefore:
 
-# Fix permissions
-sudo chmod 777 /var/log/user_commands
-sudo chmod 777 /var/log/user_commands/users
-sudo chmod 666 /var/log/user_commands/*.log
-sudo chmod 666 /var/log/user_commands/users/*.log
+### ⚠️ Do not treat command logs as harmless data.
 
-Issue 4: Logger Not Starting Automatically
+Protect them using appropriate:
 
-Symptoms:
+* File permissions
+* Access controls
+* Log retention policies
+* Backup policies
+* Encryption where required
+* Monitoring and auditing policies
 
-    No welcome message on login
+For production systems, avoid overly permissive permissions such as:
 
-    show_my_logs command not found
+```bash
+chmod 777
+```
 
-Solution:
-bash
+on sensitive log directories.
 
-# 1. Check profile script
+Use the minimum permissions required by your logging architecture.
+
+---
+
+# 🛡️ Recommended Production Approach
+
+For production servers, consider:
+
+```text
+Linux Server
+     │
+     ▼
+Command Logger
+     │
+     ▼
+Local Logs
+     │
+     ├── Log Rotation
+     │
+     ├── Retention Policy
+     │
+     └── Secure Permissions
+              │
+              ▼
+        Central Log System
+              │
+       ┌──────┴──────┐
+       ▼             ▼
+     SIEM         Monitoring
+```
+
+Examples of systems that can consume centralized logs include:
+
+* ELK / Elastic Stack
+* Graylog
+* Splunk
+* Wazuh
+* Loki
+* SIEM platforms
+
+---
+
+# 🐛 Troubleshooting
+
+## `show_my_logs: command not found`
+
+Check:
+
+```bash
 ls -la /etc/profile.d/user_command_logger.sh
+```
 
-# 2. Check if it's sourced
-grep "user_command_logger" /etc/profile
+Then reload the profile:
 
-# 3. Add if missing
-echo "source /etc/profile.d/user_command_logger.sh" >> /etc/profile
+```bash
+source /etc/profile
+```
 
-# 4. Check script permissions
-chmod 644 /etc/profile.d/user_command_logger.sh
+Or start a new SSH session.
 
-How to Uninstall the Command Logger System
-Methods to Uninstall
-Method 1: Using the Uninstall Script (Recommended)
-Step 1: Download/Create the Uninstall Script
-bash
+---
 
-# Create the uninstall script
-sudo nano /usr/m1/uninstall.
+## No Logs Are Being Generated
 
-Method 2: Using Monitor Script (If Available)
-bash
+Check:
 
-# Run the monitor script
+```bash
+ls -la /var/log/user_commands/
+```
+
+Then:
+
+```bash
+ls -la /var/log/user_commands/users/
+```
+
+Check the current user's log:
+
+```bash
+cat /var/log/user_commands/users/$(whoami)_commands.log
+```
+
+Check whether command entries exist:
+
+```bash
+grep -c "^\[CMD\]" \
+    /var/log/user_commands/users/$(whoami)_commands.log
+```
+
+---
+
+## Permission Denied
+
+Check:
+
+```bash
+ls -ld /var/log/user_commands
+ls -ld /var/log/user_commands/users
+```
+
+Check the log files:
+
+```bash
+ls -la /var/log/user_commands/users/
+```
+
+Fix ownership/permissions according to your security policy rather than blindly using `chmod 777`.
+
+---
+
+## Logger Does Not Start Automatically
+
+Check:
+
+```bash
+ls -la /etc/profile.d/user_command_logger.sh
+```
+
+Check the profile configuration:
+
+```bash
+grep -R "user_command_logger" /etc/profile /etc/profile.d/ 2>/dev/null
+```
+
+Then:
+
+```bash
+source /etc/profile
+```
+
+Start a new SSH session after making changes.
+
+---
+
+# 🗑️ Uninstallation
+
+The recommended method is:
+
+```bash
+sudo /usr/m1/uninstall.sh
+```
+
+If the uninstall script is not available, remove the installed components manually.
+
+> **Important:** Make sure you understand which logs should be retained before deleting `/var/log/user_commands/`.
+
+After uninstalling, start a new shell session:
+
+```bash
+exit
+```
+
+Then reconnect.
+
+---
+
+# 🔎 Verify Uninstallation
+
+Check:
+
+```bash
+ls -la /usr/m1/command_logger.sh
+```
+
+Check:
+
+```bash
+ls -la /etc/profile.d/user_command_logger.sh
+```
+
+Check:
+
+```bash
+ls -la /var/log/user_commands/
+```
+
+The logging functions should no longer be available in new sessions:
+
+```bash
+show_my_logs
+count_my_commands
+```
+
+---
+
+# 📋 Commands Cheat Sheet
+
+| Command                                              | Purpose                         |
+| ---------------------------------------------------- | ------------------------------- |
+| `show_my_logs`                                       | Show your command history       |
+| `count_my_commands`                                  | Count your commands             |
+| `debug_show_raw`                                     | Show raw logging information    |
+| `show_user_logs`                                     | Show all user logs              |
+| `show_user_logs <user>`                              | Show a specific user's logs     |
+| `/usr/m1/monitor.sh`                                 | Open admin monitoring interface |
+| `tail -f /var/log/user_commands/master_commands.log` | Monitor activity in real time   |
+
+---
+
+# 💡 Example Workflow
+
+### Regular User
+
+```bash
+ssh administrator@server
+```
+
+Run:
+
+```bash
+hostname
+pwd
+df -h
+free -m
+```
+
+View activity:
+
+```bash
+show_my_logs
+```
+
+---
+
+### Administrator
+
+Open the monitor:
+
+```bash
 sudo /usr/m1/monitor.sh
+```
 
-# Select option 7 from the menu
-# Follow the prompts to uninstall
-
-Method 3: Manual Uninstall (Complete)
-bash
-
-#!/bin/bash
-# Complete manual uninstall
-
-echo "========================================="
-echo "🗑️  Uninstalling Command Logger..."
-echo "========================================="
-
-# 1. Remove scripts from /usr/m1
-echo "Removing scripts from /usr/m1..."
-sudo rm -f /usr/m1/command_logger.sh
-sudo rm -f /usr/m1/monitor.sh
-sudo rm -f /usr/m1/uninstall.sh
-
-# 2. Remove profile script
-echo "Removing profile script..."
-sudo rm -f /etc/profile.d/user_command_logger.sh
-
-# 3. Remove log directory (with confirmation)
-echo ""
-echo -n "Remove all log files? (y/N): "
-read remove_logs
-if [[ "$remove_logs" == "y" ]] || [[ "$remove_logs" == "Y" ]]; then
-    echo "Removing /var/log/user_commands..."
-    sudo rm -rf /var/log/user_commands
-    echo "✅ Logs removed"
-else
-    echo "📁 Logs kept at /var/log/user_commands"
-fi
-
-# 4. Remove cron jobs
-echo "Removing cron jobs..."
-crontab -l 2>/dev/null | grep -v "monitor.sh\|command_logger" | crontab -
-
-# 5. Remove aliases if any
-echo "Removing aliases..."
-if grep -q "show_my_logs" ~/.bashrc 2>/dev/null; then
-    sed -i '/show_my_logs/d' ~/.bashrc
-    sed -i '/count_my_commands/d' ~/.bashrc
-fi
-
-# 6. Remove from profile
-echo "Cleaning up profile..."
-if grep -q "user_command_logger.sh" /etc/profile 2>/dev/null; then
-    sudo sed -i '/user_command_logger.sh/d' /etc/profile
-fi
-
-echo "========================================="
-echo "✅ Uninstall complete!"
-echo ""
-echo "📌 To complete removal:"
-echo "  - Close and reopen your terminal"
-echo "  - OR start a new session"
-echo "========================================="
-
-Method 4: Quick One-Liner Uninstall
-bash
-
-# Complete uninstall in one command (removes everything)
-sudo rm -rf /usr/m1/command_logger.sh /usr/m1/monitor.sh /usr/m1/uninstall.sh /etc/profile.d/user_command_logger.sh /var/log/user_commands && crontab -l 2>/dev/null | grep -v "monitor.sh" | crontab - && echo "✅ Uninstall complete!"
-
-What Gets Removed
-Files Removed:
-text
-
-✅ /usr/m1/command_logger.sh
-✅ /usr/m1/monitor.sh
-✅ /usr/m1/uninstall.sh
-✅ /etc/profile.d/user_command_logger.sh
-✅ /var/log/user_commands/ (optional)
-✅ Any backup files (*.bak)
-
-Cron Jobs Removed:
-text
+Select:
 
-✅ 0 2 * * * /usr/m1/monitor.sh clean_old_logs
-✅ Any job containing "monitor.sh" or "command_logger"
+```text
+3. Show User Statistics
+```
 
-Environment Cleanup:
-text
+or:
 
-✅ Aliases and functions from shell (show_my_logs, count_my_commands)
-✅ Profile entries for auto-start
+```text
+4. Show Specific User Log
+```
 
-Verification of Uninstall
-Check if Removed Successfully
-bash
+For direct investigation:
 
-# Check if scripts are gone
-ls -la /usr/m1/command_logger.sh 2>/dev/null
-ls -la /etc/profile.d/user_command_logger.sh 2>/dev/null
+```bash
+grep "sudo" /var/log/user_commands/users/*_commands.log
+```
 
-# Check if commands still work
-show_my_logs 2>/dev/null
-count_my_commands 2>/dev/null
+---
 
-# Check if cron jobs are gone
-crontab -l | grep -i "monitor\|logger"
+# 🧩 Use Cases
 
-# Check if log directory is removed
-ls -la /var/log/user_commands 2>/dev/null
+Command Logger can be useful for:
 
-Expected Output After Successful Uninstall
-bash
+### Linux Administration
 
-# Check scripts
-$ ls -la /usr/m1/command_logger.sh
-ls: cannot access '/usr/m1/command_logger.sh': No such file or directory
+Track administrative activity on shared servers.
 
-# Check commands
-$ show_my_logs
-bash: show_my_logs: command not found
+### Security Auditing
 
-# Check cron
-$ crontab -l | grep monitor
-(No output)
+Investigate commands executed by users.
 
-# Check logs
-$ ls -la /var/log/user_commands
-ls: cannot access '/var/log/user_commands': No such file or directory
+### DevOps
 
-Post-Uninstall Cleanup
-Clear Shell Cache
-bash
+Track operational activity during troubleshooting and maintenance.
 
-# Reload profile to remove functions
-source /etc/profile 2>/dev/null
+### Shared Infrastructure
 
-# Clear bash cache
-hash -r
+Monitor activity when multiple administrators access the same server.
 
-# Start a new session (logout and login)
-exit
+### Training / Labs
 
-Remove from User's .bashrc
+Understand how shell sessions and command auditing work.
 
-If commands were added manually:
-bash
+### Incident Investigation
 
-# Remove from root's .bashrc
-sed -i '/user_command_logger/d' ~/.bashrc
-sed -i '/show_my_logs/d' ~/.bashrc
-sed -i '/count_my_commands/d' ~/.bashrc
+Review historical command activity after a security event.
 
-# Remove from other users
-for user in $(getent passwd | cut -d: -f1 | grep -v "root\|nobody"); do
-    sed -i '/user_command_logger/d' /home/$user/.bashrc
-    sed -i '/show_my_logs/d' /home/$user/.bashrc
-    sed -i '/count_my_commands/d' /home/$user/.bashrc
-done
+---
 
-Troubleshooting Uninstall
-Issue: "Permission denied" during uninstall
+# ⚠️ Limitations
 
-Solution:
-bash
+Command Logger is intentionally lightweight and Bash-based.
 
-# Run as root
-sudo su -
-# Then run uninstall commands
+It should **not** be considered a replacement for a complete security auditing platform.
 
-Issue: Cron jobs not removed
+For high-security or regulated environments, consider combining command logging with:
 
-Solution:
-bash
+* Linux audit framework
+* Centralized logging
+* SIEM
+* File integrity monitoring
+* SSH auditing
+* Privileged Access Management
+* EDR
+* Wazuh or similar security platforms
 
-# Manually edit crontab
-sudo crontab -e
-# Remove any lines containing "monitor.sh" or "command_logger"
+Also remember that shell-based logging can have limitations depending on how commands are executed, which shell is used, and how users interact with the system.
 
-# Or clear entire crontab
-sudo crontab -r
+---
 
-Issue: Commands still work after uninstall
+# 🤝 Contributing
 
-Solution:
-bash
+Contributions are welcome.
 
-# Start new session
-exit
-# Login again
+Typical contribution workflow:
 
-# Or manually remove functions
-unset -f show_my_logs count_my_commands show_user_logs debug_show_raw
+```bash
+git clone https://github.com/maelhabashy/command_logger.git
+cd command_logger
+```
 
-Issue: Log directory still exists
+Create a branch:
 
-Solution:
-bash
+```bash
+git checkout -b feature/my-feature
+```
 
-# Remove directory completely
-sudo rm -rf /var/log/user_commands
+Make your changes, test them on a non-production Linux system, then commit:
 
-# Or remove only log files but keep directory
-sudo find /var/log/user_commands -name "*.log" -delete
+```bash
+git add .
+git commit -m "Add my feature"
+```
 
-Summary
-Quick Uninstall Command
-bash
+Push your branch:
 
-# Most complete uninstall
-sudo /usr/m1/uninstall.sh  # If you have the script
-# OR
-sudo rm -rf /usr/m1/command_logger.sh /usr/m1/monitor.sh /usr/m1/uninstall.sh /etc/profile.d/user_command_logger.sh /var/log/user_commands && crontab -l 2>/dev/null | grep -v "monitor.sh" | crontab - && echo "✅ Uninstalled"
+```bash
+git push origin feature/my-feature
+```
 
-After Uninstall
-    Close and reopen your terminal
-    Or start a new shell session
-    Verify all components are removed
-    Check that functions are no longer available
+Then open a Pull Request.
 
-Important Notes
-    ⚠️ This will remove all command logs (if you choose to)
-    ⚠️ You cannot undo the uninstall
-    ⚠️ Make sure you have backups of important logs
-    ⚠️ You may need to restart your session for changes to take effect
+---
 
+# 🧪 Recommended Testing
 
-Security
-Access Control
-Resource	Read Access	Write Access	Execute Access
-/usr/m1/command_logger.sh	Root	Root	All Users
-/var/log/user_commands/	All	Root	All
-/var/log/user_commands/users/	All	All	All
-User's own log file	User	User	-
-Master log	Root	Root	-
+Before using changes on production servers, test:
 
+* New user login
+* Existing user login
+* Root login
+* SSH sessions
+* Multiple concurrent users
+* Commands containing spaces
+* Commands containing special characters
+* `sudo` usage
+* `su` usage
+* Shell logout
+* Log rotation
+* Log cleanup
+* Uninstallation
+* Reinstallation
 
-Conclusion
+---
 
-The Command Logger System provides a robust, secure, and efficient way to monitor user activities on Linux systems. With its comprehensive logging, easy-to-use interface, and flexible configuration options, it's an essential tool for system administrators.
-Quick Reference Card
-bash
+# 📜 License
 
-# User Commands
-show_my_logs          # View your command history
-count_my_commands     # Count your commands
-debug_show_raw        # View raw logs
+This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.
 
-# Root Commands
-show_user_logs        # View all users
-show_user_logs user   # View specific user
+See [`LICENSE`](LICENSE) for the complete license text.
 
-# System Commands
-tail -f /var/log/user_commands/master_commands.log  # Real-time monitoring
-ls -la /var/log/user_commands/users/               # List user logs
-grep "sudo" /var/log/user_commands/users/*         # Search for sudo commands
+---
 
-Support
+# 👨‍💻 Author
 
-For issues or questions:
-    Check the Troubleshooting section
-    Review logs using debug_show_raw
-    Verify system permissions
-    Ensure script is properly sourced
-    send email to: mr.php0@gmail.com
+**Mohamed Elhabashy**
 
-Documentation Version: 1.0
-Last Updated: 2026-09-06
+GitHub:
+
+https://github.com/maelhabashy
+
+---
+
+# ⭐ Support the Project
+
+If you find **Command Logger** useful:
+
+* ⭐ Star the repository
+* 🐛 Report bugs
+* 💡 Suggest improvements
+* 🔧 Submit Pull Requests
+* 📢 Share the project with other Linux administrators
+
+---
+
+## 🔗 Repository
+
+https://github.com/maelhabashy/command_logger
+
+---
+
+> **Command Logger — Simple Linux command auditing without the complexity of a full SIEM.**
