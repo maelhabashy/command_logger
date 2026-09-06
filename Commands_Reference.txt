@@ -1,6 +1,6 @@
 Complete Command List
-Command	Permission	Description	Syntax
-show_my_logs		All Users	Display current user's command history		show_my_logs
-count_my_commands	All Users	Show total command count for current user	count_my_commands
-debug_show_raw		All Users	Display raw log content for debugging		debug_show_raw
-show_user_logs		Root Only	View all users or specific user's logs		show_user_logs [username]
+Command	Permission	          Description                                                  	Syntax
+show_my_logs		        All Users	Display current user's command history	          	show_my_logs
+count_my_commands	      All Users	Show total command count for current user        	count_my_commands
+debug_show_raw		      All Users	Display raw log content for debugging		          debug_show_raw
+show_user_logs	      	Root Only	View all users or specific user's logs		        show_user_logs [username]
